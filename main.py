@@ -38,40 +38,61 @@ class KineticCore:
         self.thermal_penalty = 0.0
 
     def _quantum_normalize(self, value: float, reference: float) -> float:
+        """Enhanced normalization using relativistic velocity mapping"""
         x = value / reference
-        return math.tanh(math.log(x + math.sqrt(x**2 + 1)))
+        return x / math.sqrt(1 + x**2)
 
     def _temporal_adjustment(self, component: str) -> float:
-        tech_progression = {
-            'cpu_sc': 1.18,
-            'cpu_mc': 1.22,
-            'gpu': 1.35
+        """Hybrid growth model combining logistic and exponential components"""
+        growth_params = {
+            'cpu_sc': {'base': 1.18, 'k': 0.4, 'carrying_capacity': 2.8},
+            'cpu_mc': {'base': 1.22, 'k': 0.35, 'carrying_capacity': 3.2},
+            'gpu': {'base': 1.35, 'k': 0.3, 'carrying_capacity': 4.0}
         }
-        months_since_ref = (datetime.now().year - 2023) * 12
-        return tech_progression.get(component, 1.0) ** (months_since_ref / 12)
+        params = growth_params.get(component, {'base': 1.0, 'k': 0.0, 'carrying_capacity': 1.0})
+        
+        years_since_ref = (datetime.now().year - 2023) + (datetime.now().month - 1)/12.0
+        
+        # Logistic component
+        logistic = params['carrying_capacity'] / (1 + math.exp(-params['k'] * years_since_ref))
+        
+        # Exponential component
+        exponential = params['base'] ** years_since_ref
+        
+        # Blending function with dynamic weighting
+        blend_ratio = math.tanh(years_since_ref/4)
+        return logistic * blend_ratio + exponential * (1 - blend_ratio)
 
     def _calculate_entanglement(self, components: Dict[str, float]) -> float:
+        """Multi-dimensional performance synthesis with synergy factors"""
         time_aware_refs = {
             k: v * self._temporal_adjustment(k)
             for k, v in self.REFERENCE_EPOCH.items()
             if k in ['cpu_sc', 'cpu_mc', 'gpu']
         }
 
+        # Component normalization with GPU-specific shaping
         norms = {
             'cpu_sc': self._quantum_normalize(components['cpu_sc'], time_aware_refs['cpu_sc']),
             'cpu_mc': self._quantum_normalize(components['cpu_mc'], time_aware_refs['cpu_mc']),
-            'gpu': self._quantum_normalize(components['gpu'], time_aware_refs['gpu']) ** 1.2
+            'gpu': (self._quantum_normalize(components['gpu'], time_aware_refs['gpu'])) ** 1.3
         }
 
-        mean_norm = sum(norms.values()) / 3
-        variance = sum((v - mean_norm)**2 for v in norms.values()) / 3
-        entropy = math.sqrt(variance) / (mean_norm + 1e-9)
-        balance = math.exp(-entropy * 3.5)
+        # Balance calculation using geometric harmony index
+        norms_list = list(norms.values())
+        geomean = math.exp(sum(math.log(v + 1e-9) for v in norms_list) / 3)
+        arithmean = sum(norms_list) / 3
+        harmony = geomean / (arithmean + 1e-9)
+        balance = math.exp(3.0 * (harmony - 1))
 
+        # Thermal penalty with non-linear scaling
         tdp_ratio = components.get('thermal', 150) / self.REFERENCE_EPOCH['thermal']
-        self.thermal_penalty = max(0, (tdp_ratio - 1) * 0.15)
+        thermal_excess = max(0, tdp_ratio - 1)
+        self.thermal_penalty = 0.12 * thermal_excess ** 1.7 / (1 + 0.5 * thermal_excess)
 
-        base_score = 100 * (
+        # Composite score calculation with synergy factors
+        synergy = 1.0 + 0.2 * math.tanh(5 * (min(norms.values()) - 0.6))
+        base_score = 100 * synergy * (
             (norms['cpu_sc'] ** self.harmonic_weights['cpu_sc']) *
             (norms['cpu_mc'] ** self.harmonic_weights['cpu_mc']) *
             (norms['gpu'] ** self.harmonic_weights['gpu']) *
@@ -81,6 +102,7 @@ class KineticCore:
         return base_score * (1 - self.thermal_penalty)
 
     def analyze(self, components: Dict[str, float]) -> Dict:
+        """Analyze system performance and generate detailed report"""
         score = self._calculate_entanglement(components)
         time_factor = self._temporal_adjustment('cpu_sc')
         adjusted_score = score * time_factor
@@ -94,12 +116,14 @@ class KineticCore:
         }
 
     def _classify_stratum(self, score: float) -> Tuple[str, str, str]:
+        """Classify performance into predefined strata"""
         for threshold, name, desc, color in self.PERFORMANCE_STRATA:
             if score >= threshold:
                 return (f"{color}{name}{Style.RESET_ALL}", desc, color)
         return ("Unclassified", "Unknown category", Fore.WHITE)
 
     def _generate_component_report(self, components: Dict) -> List[Dict]:
+        """Generate detailed component analysis report"""
         report = []
         for comp, value in components.items():
             if comp in self.REFERENCE_EPOCH:

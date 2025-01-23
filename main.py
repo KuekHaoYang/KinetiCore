@@ -8,7 +8,7 @@ from colorama import Fore, Style, init
 
 init(autoreset=True)
 
-class PerformanceOracle:
+class KineticCore:
     
     REFERENCE_EPOCH = {
         'cpu_sc': 2800,
@@ -120,10 +120,10 @@ class PerformanceOracle:
         return report
 
 def main():
-    print(f"\n{Fore.CYAN}=== Performance Evaluation Simplified ==={Style.RESET_ALL}")
+    print(f"\n{Fore.CYAN}=== KineticCore Performance Evaluation ==={Style.RESET_ALL}")
     print(f"{Fore.YELLOW}Understand your system's power at a glance{Style.RESET_ALL}\n")
     
-    oracle = PerformanceOracle()
+    core = KineticCore()
     
     try:
         components = {
@@ -133,7 +133,7 @@ def main():
             'thermal': float(input(f"{Fore.WHITE}TDP (Watts) [Default 150]: {Style.RESET_ALL}") or 150)
         }
 
-        results = oracle.analyze(components)
+        results = core.analyze(components)
         
         print(f"\n{Fore.YELLOW}═══════════════════════════════════════════════")
         print(f"{Fore.CYAN}✨  Instant Rating: {results['temporal_score']:.0f}/140  ✨")
@@ -164,7 +164,7 @@ def main():
         export_choice = input(f"\n{Fore.WHITE}Export report? (JSON/CSV/TXT): {Style.RESET_ALL}").lower()
         if export_choice in ['json', 'csv', 'txt']:
             timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-            filename = f"perf_report_{timestamp}.{export_choice}"
+            filename = f"kineticcore_report_{timestamp}.{export_choice}"
             
             with open(filename, 'w') as f:
                 if export_choice == 'json':

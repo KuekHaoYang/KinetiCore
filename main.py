@@ -18,13 +18,13 @@ class PerformanceOracle:
     }
 
     PERFORMANCE_STRATA = [
-        (2000, "Titan Class", "Beyond cutting-edge systems", Fore.MAGENTA),
-        (1800, "Quantum Elite", "Flagship workstations", Fore.BLUE),
-        (1500, "Dragonfire", "Extreme gaming rigs", Fore.CYAN),
-        (1200, "Phoenix", "Enthusiast systems", Fore.GREEN),
-        (900, "Griffin", "Premium devices", Fore.YELLOW),
-        (600, "Basilisk", "Productivity systems", Fore.LIGHTRED_EX),
-        (300, "Chimera", "Basic computing", Fore.RED),
+        (140, "Titan Class", "Beyond cutting-edge systems", Fore.MAGENTA),
+        (120, "Quantum Elite", "Flagship workstations", Fore.BLUE),
+        (100, "Dragonfire", "Extreme gaming rigs", Fore.CYAN),
+        (80, "Phoenix", "Enthusiast systems", Fore.GREEN),
+        (60, "Griffin", "Premium devices", Fore.YELLOW),
+        (40, "Basilisk", "Productivity systems", Fore.LIGHTRED_EX),
+        (20, "Chimera", "Basic computing", Fore.RED),
         (0, "Ancient", "Legacy hardware", Fore.WHITE)
     ]
 
@@ -136,7 +136,7 @@ def main():
         results = oracle.analyze(components)
         
         print(f"\n{Fore.YELLOW}═══════════════════════════════════════════════")
-        print(f"{Fore.CYAN}✨  Instant Rating: {results['temporal_score']:.0f}/2000  ✨")
+        print(f"{Fore.CYAN}✨  Instant Rating: {results['temporal_score']:.0f}/140  ✨")
         print(f"{Fore.YELLOW}═══════════════════════════════════════════════{Style.RESET_ALL}")
         
         print(f"\n{Fore.GREEN}=== Detailed Analysis ==={Style.RESET_ALL}")

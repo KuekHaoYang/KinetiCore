@@ -1,102 +1,75 @@
-# KineticCore 🚀
+# KineticCore Performance Index v2.1
 
-> A sophisticated system performance evaluation tool that provides instant, future-aware hardware ratings.
+> A web-based calculator to determine a unified hardware performance index based on CPU, GPU, and TDP.
 
-[![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+<!-- Example Badges (Use placeholders if URLs not provided) -->
+![Version](https://img.shields.io/badge/version-2.1-blue?style=flat-square) <!-- Hardcoded version from project name -->
 
-## Overview
+## Table of Contents
 
-KineticCore is an intelligent system analysis tool that evaluates hardware components using advanced metrics and provides meaningful insights about your system's capabilities. It uses quantum-inspired normalization and temporal adjustments to deliver accurate, future-proof performance ratings.
+- [About The Project](#about-the-project)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-## Features
+## About The Project
 
-- 🎯 **Instant Performance Rating**: Get a comprehensive score out of 140 points
-- 🔮 **Future-Aware Analysis**: Automatically adjusts scores based on technological progression
-- 🌡️ **Thermal Efficiency**: Considers power consumption and thermal characteristics
-- 📊 **Component-Level Analysis**: Detailed insights for CPU and GPU performance
-- 📈 **Multiple Export Formats**: Save reports in JSON, CSV, or TXT formats
-- 🎨 **Color-Coded Output**: Intuitive visual feedback using terminal colors
+This project provides a single-page web application that calculates a 'KineticCore Performance Index'. Users input their CPU single-core score, multi-core score, GPU OpenCL score, and optionally the system's TDP.
 
-## Installation
+The application uses a complex algorithm (v2.1) involving normalization, temporal adjustments, weighting, balance factors, synergy bonuses, latency boosts, and thermal penalties to generate a unified performance score and classify the system into a performance tier. It also includes multi-language support (English/Chinese).
 
-1. Clone the repository:
-```bash
-git clone https://github.com/KuekHaoYang/KinetiCore.git
-cd kineticcore
-```
+**Key Features:**
 
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+*   Calculates a unified performance index from CPU (SC/MC), GPU (OpenCL), and TDP inputs.
+*   Uses the KineticCore v2.1 algorithm with normalization, temporal adjustment, balance/synergy factors, and thermal penalties.
+*   Classifies results into detailed performance tiers (e.g., Apex, Titan, Quantum).
+*   Provides a detailed breakdown of contributing factors and component snapshot.
+*   Responsive design for different screen sizes.
+*   Multi-language support (English/Chinese) with UI switching.
+*   Visual feedback with score, tier, descriptions, and animated bars.
+*   Client-side calculation (no backend required).
+*   Error handling for invalid inputs.
+
+### Built With
+
+*   HTML5
+*   CSS3 (including Flexbox, Grid, gradients, backdrop-filter)
+*   JavaScript (ES6+) (Vanilla JS, DOM manipulation, complex calculations, localization)
+
+## Getting Started
+
+This section guides you through running the project locally. As it's a single HTML file, no complex setup is needed.
+
+### Prerequisites
+
+*   A modern web browser supporting HTML5, CSS3, and JavaScript (ES6+). Examples include recent versions of Chrome, Firefox, Safari, or Edge.
+
+### Installation
+
+1.  Download the `index.html` file (or clone the repository containing it).
+    ```sh
+    git clone https://github.com/KuekHaoYang/KinetiCore.git
+    cd KinetiCore
+    ```
+2.  No further installation steps are required. Simply locate the downloaded `index.html` file.
 
 ## Usage
 
-Run the program:
-```bash
-python main.py
-```
-
-Follow the prompts to input your system's benchmark scores:
-- Single-Core CPU Score
-- Multi-Core CPU Score
-- OpenCL GPU Score
-- TDP (Thermal Design Power) in Watts
-
-## Performance Tiers
-
-The system classifies hardware into the following performance strata:
-
-| Score Range | Tier | Description |
-|------------|------|-------------|
-| 140+ | Titan Class | Beyond cutting-edge systems |
-| 120-139 | Quantum Elite | Flagship workstations |
-| 100-119 | Dragonfire | Extreme gaming rigs |
-| 80-99 | Phoenix | Enthusiast systems |
-| 60-79 | Griffin | Premium devices |
-| 40-59 | Basilisk | Productivity systems |
-| 20-39 | Chimera | Basic computing |
-| 0-19 | Ancient | Legacy hardware |
-
-## Technical Details
-
-### Reference Benchmarks
-- Single-Core CPU: 2800 points
-- Multi-Core CPU: 18000 points
-- GPU (OpenCL): 45000 points
-- Reference TDP: 150W
-
-### Scoring Methodology
-- Quantum-normalized component scores
-- Temporal adjustment for technology progression
-- Harmonic weighted averaging
-- Thermal efficiency considerations
-- System balance analysis
-
-## Requirements
-
-- Python 3.6 or higher
-- colorama
-- math (standard library)
-- datetime (standard library)
-- json (standard library)
-- csv (standard library)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+1.  Open the `index.html` file in your web browser (e.g., by double-clicking it or using File > Open).
+2.  Enter your CPU Single-Core score (e.g., from a benchmark like Geekbench 6 SC).
+3.  Enter your CPU Multi-Core score (e.g., from Geekbench 6 MC).
+4.  Enter your GPU Compute score (e.g., from Geekbench 6 OpenCL or Vulkan).
+5.  (Optional) Enter the system's TDP (Thermal Design Power) in Watts. If left blank or invalid, a default value (currently 150W) will be used.
+6.  Click the "Analyze Performance" button.
+7.  Wait for the analysis to complete (a brief "Analyzing..." message will appear).
+8.  The results, including the KineticCore Index score, the assigned performance tier (like "Quantum Elite" or "Phoenix"), and a detailed breakdown of normalized scores and contributing factors, will be displayed below the button. A component snapshot provides context on individual input values relative to reference points.
+9.  (Optional) Click the language button ("中文" or "English") in the top-right corner to switch the interface language between English and Chinese. The results will automatically update to the selected language if already calculated.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Author
-
-Created with ❤️ by Kuek Hao Yang
-
-## Acknowledgments
-
-- Inspired by modern benchmark methodologies
-- Uses colorama for terminal coloring
-- Mathematical models based on quantum-inspired normalization 
+Distributed under the Not Specified License. See `LICENSE` for more information (assuming a `LICENSE` file exists or will be created).

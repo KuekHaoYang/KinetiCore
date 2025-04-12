@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en"> <!- Default lang attribute -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Title will be set by JS -->
+    <title>KineticCore Performance Index v2.1</title>
+    <style>
+        /* --- Basic Reset & Font --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2a2a4e 100%);
+            color: #e5e5e5;
+            display: flex;
+            flex-direction: column; /* Stack container and switcher */
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 15px 40px 15px; /* Add bottom padding */
+        }
+        /* --- Language Switcher --- */
+        .lang-switcher {
+            position: fixed; /* Keep visible */
+            top: 15px;
+            right: 15px;
+            z-index: 100;
+        }
+        .lang-button {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #e0e0e0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        .lang-button:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        /* --- App Container --- */
+        .container {
+            background-color: rgba(255, 255, 255, 0.06);
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            width: 100%;
+            max-width: 720px;
+            text-align: center;
+            margin-top: 30px; /* Space below potential fixed switcher */
+        }
+        h1 {
+            margin-bottom: 25px;
+            font-weight: 200;
+            font-size: 2.4em;
+            letter-spacing: 1.5px;
+            color: #a69bff;
+        }
+        /* --- Input Fields --- */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block; margin-bottom: 6px; font-weight: 500;
+            color: rgba(255, 255, 255, 0.85); font-size: 0.9em;
+        }
+        .input-group input[type="number"] {
+            width: 100%; padding: 10px 12px; border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px; background-color: rgba(255, 255, 255, 0.1);
+            color: #fff; font-size: 0.95em; outline: none;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-group input[type="number"]::placeholder { color: rgba(255, 255, 255, 0.4); }
+        .input-group input[type="number"]:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(166, 155, 255, 0.5);
+            border-color: rgba(166, 155, 255, 0.7);
+        }
+        /* --- Button --- */
+        .calculate-button {
+            background: linear-gradient(135deg, #a69bff 0%, #7a70dd 100%);
+            color: #fff; border: none; padding: 14px 35px; border-radius: 50px;
+            font-size: 1.1em; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+            margin-top: 10px; letter-spacing: 0.5px;
+        }
+        .calculate-button:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); }
+        .calculate-button:active { transform: translateY(-1px); box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2); }
+
+        /* --- Result Area --- */
+        #result-area {
+            margin-top: 30px; background-color: rgba(0, 0, 0, 0.18);
+            padding: 0; border-radius: 12px; min-height: 0; text-align: left;
+            opacity: 0; max-height: 0; overflow: hidden;
+            transition: opacity 0.6s ease, max-height 0.8s ease, padding 0.6s ease, margin-top 0.6s ease;
+        }
+         #result-area.visible {
+             opacity: 1; max-height: 1800px; padding: 25px 30px; margin-top: 30px;
+         }
+         #result-area.loading {
+             opacity: 1; max-height: 100px; padding: 20px; display: flex;
+             justify-content: center; align-items: center; font-style: italic;
+             color: rgba(255, 255, 255, 0.6);
+         }
+        /* --- Result Formatting --- */
+        .result-header {
+             text-align: center; margin-bottom: 25px;
+             border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 25px;
+         }
+        .result-score-value {
+            font-size: 3.8em; font-weight: bold; color: #fff; line-height: 1.1; letter-spacing: -1px;
+        }
+        .result-score-label {
+            font-size: 1.1em; color: rgba(255, 255, 255, 0.7); margin-top: 5px; display: block;
+        }
+        .performance-tier { margin-top: 15px; }
+        .tier-name { font-size: 1.5em; font-weight: 600; display: block; margin-bottom: 5px; }
+        .tier-desc { font-size: 0.95em; color: rgba(255, 255, 255, 0.8); }
+
+        .result-details {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px 30px; margin-top: 20px;
+        }
+        .result-section h2 {
+            font-size: 1.3em; font-weight: 500; color: #a69bff; margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15); padding-bottom: 8px;
+        }
+        .detail-item {
+            display: flex; justify-content: space-between; margin-bottom: 10px;
+            font-size: 0.95em; align-items: center;
+        }
+        .detail-item .label { color: rgba(255, 255, 255, 0.75); padding-right: 10px; }
+        .detail-item .value { font-weight: 500; color: #f0f0f0; text-align: right; white-space: nowrap;}
+        .detail-item .value.penalty { color: #ff9494; }
+        .detail-item .value.bonus { color: #94ff94; }
+        .detail-item .bar-container {
+            flex-grow: 1; height: 8px; background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px; margin: 0 10px; overflow: hidden;
+        }
+        .detail-item .bar {
+            height: 100%; background-color: #a69bff; border-radius: 4px; width: 0%;
+            transition: width 0.5s ease-out;
+        }
+        .modifier-label { font-style: italic; color: rgba(255, 255, 255, 0.65); }
+        .modifier-value { font-weight: 600; }
+
+        /* --- Component Snapshot --- */
+        .component-list { list-style: none; padding: 0; }
+        .component-item {
+            background-color: rgba(255, 255, 255, 0.05); padding: 10px 15px;
+            border-radius: 6px; margin-bottom: 8px; font-size: 0.9em;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 5px 15px;
+        }
+        .comp-name { font-weight: bold; color: #c0b6ff; flex-basis: 70px; }
+        .comp-value { color: rgba(255, 255, 255, 0.7); font-size: 0.9em; }
+        .comp-modernity { font-weight: 500; white-space: nowrap; }
+        /* Classes for assessment text color */
+        .comp-assessment-modern, .comp-assessment-efficient { color: #50fa7b; }
+        .comp-assessment-legacy, .comp-assessment-high { color: #ffb86c; }
+
+        /* --- Error Message --- */
+        .error-message {
+            color: #ff8f8f; font-weight: bold; text-align: center; margin-top: 20px;
+            padding: 10px; background-color: rgba(255, 100, 100, 0.1);
+            border: 1px solid rgba(255, 100, 100, 0.3); border-radius: 8px;
+        }
+
+        /* --- Stratum Colors --- */
+        .stratum-color-apex { color: #ffffff; text-shadow: 0 0 10px #ffb1ff; }
+        .stratum-color-titan { color: #f98dff; }
+        .stratum-color-quantum { color: #9d8cff; }
+        .stratum-color-dragonfire { color: #8be9fd; }
+        .stratum-color-phoenix { color: #50fa7b; }
+        .stratum-color-griffin { color: #f1fa8c; }
+        .stratum-color-basilisk { color: #ffb86c; }
+        .stratum-color-chimera { color: #ff7b7b; }
+        .stratum-color-fragmented { color: #ff5050; }
+        .stratum-color-ancient { color: #c0c0c0; }
+        .stratum-color-inert { color: #909090; }
+
+        /* --- Responsive --- */
+        @media (max-width: 600px) {
+             .container { padding: 20px 15px; margin-top: 60px; /* More space for switcher */ }
+             h1 { font-size: 1.8em; }
+             .input-grid { grid-template-columns: 1fr 1fr; }
+             .result-score-value { font-size: 3em; } .tier-name { font-size: 1.3em; }
+             .result-details { grid-template-columns: 1fr; }
+             .component-item { flex-direction: column; align-items: flex-start; }
+         }
+    </style>
+</head>
+<body>
+
+    <div class="lang-switcher">
+        <button id="lang-toggle-btn" class="lang-button">中文</button>
+    </div>
+
+    <div class="container">
+        <!-- Use data-translate-key for static elements -->
+        <h1 data-translate-key="title">KineticCore Performance Index v2.1</h1>
+
+        <div class="input-grid">
+            <div class="input-group">
+                <label for="cpu_sc" data-translate-key="inputs.scLabel">Single-Core:</label>
+                <input type="number" id="cpu_sc" data-translate-key-placeholder="inputs.scPlaceholder" placeholder="e.g., 2000" step="any">
+            </div>
+            <div class="input-group">
+                <label for="cpu_mc" data-translate-key="inputs.mcLabel">Multi-Core:</label>
+                <input type="number" id="cpu_mc" data-translate-key-placeholder="inputs.mcPlaceholder" placeholder="e.g., 12000" step="any">
+            </div>
+            <div class="input-group">
+                <label for="gpu" data-translate-key="inputs.gpuLabel">GPU (OpenCL):</label>
+                <input type="number" id="gpu" data-translate-key-placeholder="inputs.gpuPlaceholder" placeholder="e.g., 40000" step="any">
+            </div>
+            <div class="input-group">
+                <label for="thermal" data-translate-key="inputs.tdpLabel">TDP (Watts):</label>
+                <input type="number" id="thermal" data-translate-key-placeholder="inputs.tdpPlaceholder" placeholder="Def: 150" step="any">
+            </div>
+        </div>
+
+        <button id="calculate-btn" class="calculate-button" data-translate-key="buttons.calculate">Analyze Performance</button>
+
+        <div id="result-area"><!-- Results populated here --></div>
+        <div id="error-display"></div>
+
+    </div>
+
+    <script>
+        // --- Translations Store ---
+        const translations = {
+            en: {
+                pageTitle: "KineticCore Performance Index v2.1",
+                title: "KineticCore Performance Index v2.1",
+                langButton: "中文", // Shows the *other* language
+                inputs: {
+                    scLabel: "Single-Core:", scPlaceholder: "e.g., 2000",
+                    mcLabel: "Multi-Core:", mcPlaceholder: "e.g., 12000",
+                    gpuLabel: "GPU (OpenCL):", gpuPlaceholder: "e.g., 40000",
+                    tdpLabel: "TDP (Watts):", tdpPlaceholder: "Def: 150"
+                },
+                buttons: {
+                    calculate: "Analyze Performance"
+                },
+                results: {
+                    loading: "Analyzing v2.1...",
+                    mainLabel: "KineticCore Index v2.1",
+                    coreComponents: "Core Components",
+                    modifiersPenalties: "Modifiers & Penalties",
+                    componentSnapshot: "Component Snapshot",
+                    // Detail labels
+                    scNorm: "SC Norm:", mcNorm: "MC Norm:", gpuNorm: "GPU Norm:",
+                    blendedPerf: "Blended Core Perf:",
+                    overallBalance: "Overall Balance:", ratioFactor: "MC/SC Ratio Factor:",
+                    generalSynergy: "General Synergy:", scGpuSynergy: "SC↔GPU Synergy:",
+                    latencyBoost: "Latency Boost:", thermalPenalty: "Thermal Penalty:",
+                    viabilityFactor: "Viability Factor:"
+                },
+                components: {
+                    modern: "Modern", legacy: "Legacy",
+                    efficient: "Efficient", highPower: "High Power",
+                    wattsUnit: " W"
+                },
+                tiers: { // Added keys for direct lookup
+                    apex: { name: "Apex", desc: "Transcendent performance" },
+                    titan: { name: "Titan Class", desc: "Beyond cutting-edge" },
+                    quantum: { name: "Quantum Elite", desc: "Flagship workstation/gaming" },
+                    dragonfire: { name: "Dragonfire", desc: "Extreme enthusiast" },
+                    phoenix: { name: "Phoenix", desc: "High-end enthusiast" },
+                    griffin: { name: "Griffin", desc: "Premium mainstream" },
+                    basilisk: { name: "Basilisk", desc: "Solid productivity" },
+                    chimera: { name: "Chimera", desc: "Basic computing" },
+                    fragmented: { name: "Fragmented", desc: "Critically unbalanced/limited" },
+                    inert: { name: "Inert", desc: "Effectively non-operational" }
+                },
+                errors: {
+                    invalidInput: "Invalid or missing input for {component}. Use positive numbers.",
+                    calculationError: "An unexpected error occurred during calculation (v2.1). Check console."
+                }
+            },
+            zh: {
+                pageTitle: "KineticCore 性能指数 v2.1",
+                title: "KineticCore 性能指数 v2.1",
+                langButton: "English", // Shows the *other* language
+                inputs: {
+                    scLabel: "单核分数:", scPlaceholder: "例如, 2000",
+                    mcLabel: "多核分数:", mcPlaceholder: "例如, 12000",
+                    gpuLabel: "GPU (OpenCL):", gpuPlaceholder: "例如, 40000",
+                    tdpLabel: "TDP (瓦):", tdpPlaceholder: "默认: 150"
+                },
+                buttons: {
+                    calculate: "分析性能"
+                },
+                results: {
+                    loading: "分析中 v2.1...",
+                    mainLabel: "KineticCore 指数 v2.1",
+                    coreComponents: "核心组件",
+                    modifiersPenalties: "修正项与惩罚项",
+                    componentSnapshot: "组件快照",
+                    // Detail labels
+                    scNorm: "单核标准化:", mcNorm: "多核标准化:", gpuNorm: "GPU标准化:",
+                    blendedPerf: "混合核心性能:",
+                    overallBalance: "综合平衡:", ratioFactor: "多核/单核比率因子:",
+                    generalSynergy: "通用协同:", scGpuSynergy: "单核↔GPU协同:",
+                    latencyBoost: "延迟提升:", thermalPenalty: "散热惩罚:",
+                    viabilityFactor: "可用性因子:"
+                },
+                components: {
+                    modern: "现代", legacy: "过时",
+                    efficient: "高效", highPower: "高功耗",
+                    wattsUnit: " 瓦"
+                },
+                tiers: {
+                    apex: { name: "顶点级", desc: "超越时代的性能" },
+                    titan: { name: "泰坦级", desc: "超越尖端" },
+                    quantum: { name: "量子精英", desc: "旗舰工作站/游戏" },
+                    dragonfire: { name: "龙焰级", desc: "极限发烧友" },
+                    phoenix: { name: "凤凰级", desc: "高端发烧友" },
+                    griffin: { name: "狮鹫级", desc: "优质主流" },
+                    basilisk: { name: "石化蜥蜴级", desc: "可靠生产力" },
+                    chimera: { name: "奇美拉级", desc: "基础计算" },
+                    fragmented: { name: "碎片化", desc: "严重失衡/受限" },
+                    inert: { name: "惰性", desc: "基本无法运行" }
+                },
+                errors: {
+                    invalidInput: "{component} 的输入无效或缺失。请使用正数。",
+                    calculationError: "计算过程中发生意外错误 (v2.1)。请检查控制台。"
+                }
+            }
+        };
+
+        // --- Configuration v2.1 ---
+        const KineticCoreConfig = {
+            REFERENCE_EPOCH: { cpu_sc: 2800, cpu_mc: 18000, gpu: 45000, thermal: 150 },
+            // Tiers are now defined in translations object, only store keys/thresholds here
+             PERFORMANCE_STRATA: [
+                { threshold: 2000, key: "apex", colorClass: "stratum-color-apex" },
+                { threshold: 1750, key: "titan", colorClass: "stratum-color-titan" },
+                { threshold: 1500, key: "quantum", colorClass: "stratum-color-quantum" },
+                { threshold: 1250, key: "dragonfire", colorClass: "stratum-color-dragonfire" },
+                { threshold: 1000, key: "phoenix", colorClass: "stratum-color-phoenix" },
+                { threshold: 750, key: "griffin", colorClass: "stratum-color-griffin" },
+                { threshold: 500, key: "basilisk", colorClass: "stratum-color-basilisk" },
+                { threshold: 250, key: "chimera", colorClass: "stratum-color-chimera" },
+                { threshold: 50, key: "fragmented", colorClass: "stratum-color-fragmented" },
+                { threshold: 0, key: "inert", colorClass: "stratum-color-inert" }
+             ],
+            weights: { cpu_sc: 0.40, cpu_mc: 0.30, gpu: 0.30 },
+            growth_params: {
+                cpu_sc: { base: 1.18, k: 0.4, carrying_capacity: 2.8 },
+                cpu_mc: { base: 1.22, k: 0.35, carrying_capacity: 3.2 },
+                gpu: { base: 1.35, k: 0.3, carrying_capacity: 4.0 },
+                thermal: { base: 1.0, k: 0.0, carrying_capacity: 1.0 }
+            },
+            REFERENCE_YEAR: 2023,
+            SCORE_SCALING_FACTOR: 1200,
+            EPSILON: 1e-9,
+            normalization_k: { sc: 1.1, mc: 1.0, gpu: 1.0 },
+            core_ratio: { ideal_min: 4.0, ideal_max: 8.0, gaussian_width: 4.0 },
+            synergy_sc_gpu: { bonus: 0.10, threshold: 0.7, slope: 6.0 },
+            synergy_general: { bonus: 0.05, threshold: 0.6, slope: 5.0 },
+            latency_boost: { threshold: 0.85, factor: 0.08, range: 0.15, condition_mc_min: 0.15, condition_gpu_min: 0.15 },
+            thermal_penalty: { max_penalty: 0.45, inflection_ratio: 1.5, slope: 5.0 },
+            core_blend: { sum_exponent: 0.7, geom_exponent: 0.3 },
+            viability_gate: { min_norm_threshold: 0.05 }
+        };
+
+        // --- Global State ---
+        let currentLanguage = 'en'; // Default language
+        let currentResults = null; // Store results for re-display on lang change
+
+        // --- Core Logic Functions v2.1 --- (Remain unchanged from previous version)
+
+        function tanh_normalize(value, reference, k) { /* ... same ... */
+            if (reference <= KineticCoreConfig.EPSILON) return 0;
+            const x = value / reference;
+            if (!isFinite(x)) return 1.0;
+            return Math.max(0, Math.tanh(k * x));
+         }
+        function temporal_adjustment(component) { /* ... same ... */
+            const params = KineticCoreConfig.growth_params[component] || { base: 1.0, k: 0.0, carrying_capacity: 1.0 };
+            const now = new Date();
+            const years_since_ref = Math.max(0, (now.getFullYear() - KineticCoreConfig.REFERENCE_YEAR) + (now.getMonth()) / 12.0);
+            if (years_since_ref <= 0) return 1.0;
+            const logistic = params.carrying_capacity / (1 + Math.exp(-params.k * years_since_ref));
+            const exponential = Math.pow(params.base, years_since_ref);
+            const blend_ratio = (Math.tanh(years_since_ref / 4) + 1) / 2;
+            return logistic * blend_ratio + exponential * (1 - blend_ratio);
+         }
+        function gaussian(x, mu, sigma) { /* ... same ... */
+            return Math.exp(-Math.pow(x - mu, 2) / (2 * Math.pow(sigma, 2)));
+         }
+        function sigmoid(x, L, k, x0) { /* ... same ... */
+             return L / (1 + Math.exp(-k * (x - x0)));
+         }
+        function calculate_performance_index_v2_1(components) { /* ... same calculation logic ... */
+            const C = KineticCoreConfig;
+            const time_aware_refs = {};
+            for (const k in C.REFERENCE_EPOCH) { time_aware_refs[k] = C.REFERENCE_EPOCH[k] * (k === 'thermal' ? 1 : temporal_adjustment(k)); }
+            const norms = { sc: tanh_normalize(components.cpu_sc, time_aware_refs.cpu_sc, C.normalization_k.sc), mc: tanh_normalize(components.cpu_mc, time_aware_refs.cpu_mc, C.normalization_k.mc), gpu: tanh_normalize(components.gpu, time_aware_refs.gpu, C.normalization_k.gpu) };
+            const norms_list = [norms.sc, norms.mc, norms.gpu];
+            const perf_sum = (norms.sc * C.weights.cpu_sc) + (norms.mc * C.weights.cpu_mc) + (norms.gpu * C.weights.gpu);
+            const geo_mean_base = Math.max(C.EPSILON, norms.sc) * Math.max(C.EPSILON, norms.mc) * Math.max(C.EPSILON, norms.gpu);
+            const geo_mean = Math.pow(geo_mean_base, 1/3);
+            const blended_core_perf = Math.pow(perf_sum, C.core_blend.sum_exponent) * Math.pow(geo_mean, C.core_blend.geom_exponent);
+            const sum_norms = norms_list.reduce((a, b) => a + b, 0);
+            const arithmean = sum_norms / norms_list.length;
+            const harmony = (arithmean > C.EPSILON) ? Math.min(1.0, geo_mean / arithmean) : 1.0;
+            const balance_overall = Math.pow(harmony, 0.5);
+            const mc_sc_ratio = norms.mc / (norms.sc + C.EPSILON);
+            const ideal_mid = (C.core_ratio.ideal_min + C.core_ratio.ideal_max) / 2;
+            const balance_ratio_raw = gaussian(mc_sc_ratio, ideal_mid, C.core_ratio.gaussian_width);
+            const balance_ratio = 0.5 + 0.5 * balance_ratio_raw;
+            const min_norm = Math.min(...norms_list);
+            const synergy_general = 1.0 + C.synergy_general.bonus * Math.tanh(C.synergy_general.slope * (min_norm - C.synergy_general.threshold));
+            const synergy_sc_gpu = 1.0 + C.synergy_sc_gpu.bonus * Math.tanh(C.synergy_sc_gpu.slope * (norms.sc - C.synergy_sc_gpu.threshold)) * Math.tanh(C.synergy_sc_gpu.slope * (norms.gpu - C.synergy_sc_gpu.threshold));
+            let boost_latency = 1.0;
+            if (norms.mc >= C.latency_boost.condition_mc_min && norms.gpu >= C.latency_boost.condition_gpu_min) { const latency_boost_factor = C.latency_boost.factor * Math.max(0, (norms.sc - C.latency_boost.threshold) / C.latency_boost.range); boost_latency = 1.0 + Math.min(C.latency_boost.factor, latency_boost_factor); }
+            const tdp_ratio = components.thermal / time_aware_refs.thermal;
+            const penalty_thermal = sigmoid(tdp_ratio, C.thermal_penalty.max_penalty, C.thermal_penalty.slope, C.thermal_penalty.inflection_ratio);
+            const pre_gate_score = C.SCORE_SCALING_FACTOR * blended_core_perf * balance_overall * balance_ratio * synergy_general * synergy_sc_gpu * boost_latency * (1 - penalty_thermal);
+            let viability_multiplier = 1.0;
+            const gate_thresh = C.viability_gate.min_norm_threshold;
+            if (gate_thresh > C.EPSILON) { const min_relative_norm = Math.min( norms.sc / gate_thresh, norms.mc / gate_thresh, norms.gpu / gate_thresh ); viability_multiplier = Math.min(1.0, Math.max(0, min_relative_norm)); } else { viability_multiplier = Math.min(norms.sc, norms.mc, norms.gpu) >= 0 ? 1.0 : 0.0; }
+            const final_score = pre_gate_score * viability_multiplier;
+            const clamped_final_score = Math.max(0, final_score);
+            return { final_score: clamped_final_score, factors: { norm_sc: norms.sc, norm_mc: norms.mc, norm_gpu: norms.gpu, core_perf: blended_core_perf, balance_overall: balance_overall, balance_ratio: balance_ratio, synergy_general: synergy_general, synergy_sc_gpu: synergy_sc_gpu, boost_latency: boost_latency, penalty_thermal_pct: penalty_thermal * 100, viability_multiplier: viability_multiplier } };
+         }
+
+        // --- Language & UI Functions ---
+
+        // Apply translations to the page
+        function applyTranslations(lang) {
+            const langData = translations[lang];
+            if (!langData) return; // Safety check
+
+            // Set page language attribute and title
+            document.documentElement.lang = lang;
+            document.title = langData.pageTitle;
+
+            // Update elements with data-translate-key
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.getAttribute('data-translate-key');
+                // Resolve nested keys like 'inputs.scLabel'
+                const value = key.split('.').reduce((obj, k) => obj?.[k], langData);
+                if (value !== undefined) {
+                    el.textContent = value;
+                } else {
+                    console.warn(`Translation key not found: ${key} for lang ${lang}`);
+                }
+            });
+
+            // Update elements with data-translate-key-placeholder
+             document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-key-placeholder');
+                const value = key.split('.').reduce((obj, k) => obj?.[k], langData);
+                if (value !== undefined) {
+                    el.placeholder = value;
+                } else {
+                     console.warn(`Placeholder key not found: ${key} for lang ${lang}`);
+                 }
+            });
+
+            // Update language toggle button text
+            ui.langToggleButton.textContent = langData.langButton;
+
+            // If results are already displayed, re-render them with the new language
+            if (currentResults) {
+                 const stratum = classify_stratum(currentResults.final_score, langData); // Pass langData
+                 const component_report = generate_component_report(currentResults.inputs, langData); // Pass langData
+                 displayResults_v2_1(currentResults, stratum, component_report, langData); // Pass langData
+                 requestAnimationFrame(() => { animateBars(currentResults.factors); }); // Re-run animation
+            }
+        }
+
+        // Modified classification to use translated tiers
+        function classify_stratum(score, langData) {
+             for (const stratumInfo of KineticCoreConfig.PERFORMANCE_STRATA) {
+                 if (score >= stratumInfo.threshold) {
+                     // Get translated name and description from langData using the key
+                     const tierTranslations = langData.tiers[stratumInfo.key] || { name: stratumInfo.key, desc: 'N/A' };
+                     return {
+                         name: tierTranslations.name,
+                         desc: tierTranslations.desc,
+                         colorClass: stratumInfo.colorClass
+                     };
+                 }
+             }
+             // Fallback to lowest tier if somehow no match (shouldn't happen with threshold 0)
+             const lowestTierKey = KineticCoreConfig.PERFORMANCE_STRATA[KineticCoreConfig.PERFORMANCE_STRATA.length - 1].key;
+             const lowestTierTranslations = langData.tiers[lowestTierKey] || { name: lowestTierKey, desc: 'N/A' };
+             return {
+                  name: lowestTierTranslations.name,
+                  desc: lowestTierTranslations.desc,
+                  colorClass: KineticCoreConfig.PERFORMANCE_STRATA[KineticCoreConfig.PERFORMANCE_STRATA.length - 1].colorClass
+              };
+         }
+
+        // Modified component report to use translations
+        function generate_component_report(components, langData) {
+             const report = [];
+             const component_map = { 'cpu_sc': 'cpu_sc', 'cpu_mc': 'cpu_mc', 'gpu': 'gpu', 'thermal': 'thermal' };
+             const compTranslations = langData.components;
+
+             for (const comp_internal in component_map) {
+                 const input_key = component_map[comp_internal];
+                 const value = components[input_key];
+
+                 if (value !== undefined && KineticCoreConfig.REFERENCE_EPOCH.hasOwnProperty(comp_internal)) {
+                    const reference = KineticCoreConfig.REFERENCE_EPOCH[comp_internal];
+                    const time_adj_factor = (comp_internal === 'thermal') ? 1 : temporal_adjustment(comp_internal);
+                    let modernity_ratio = 0;
+                    const current_ref = reference * time_adj_factor;
+
+                    if (current_ref > KineticCoreConfig.EPSILON) { modernity_ratio = value / current_ref; }
+
+                    let assessmentKey = '';
+                    if (comp_internal === 'thermal') {
+                         assessmentKey = modernity_ratio <= 1.1 ? 'efficient' : 'highPower';
+                    } else {
+                         assessmentKey = modernity_ratio >= 0.95 ? 'modern' : 'legacy';
+                    }
+                    const assessmentText = compTranslations[assessmentKey] || assessmentKey; // Get translated text
+
+                    const health = Math.min(100, Math.max(0, Math.sqrt(Math.max(0, modernity_ratio)) * 100));
+
+                    // Use assessment key to determine CSS class more reliably
+                    const assessmentClass = assessmentKey === 'modern' || assessmentKey === 'efficient' ? 'comp-assessment-modern'
+                                          : (assessmentKey === 'legacy' ? 'comp-assessment-legacy' : 'comp-assessment-high');
+
+                    report.push({
+                         component: comp_internal.toUpperCase().replace('_', '-'),
+                         value: value + (comp_internal === 'thermal' ? compTranslations.wattsUnit : ''), // Use translated unit
+                         modernity: `${(modernity_ratio * 100).toFixed(0)}%`,
+                         health: `${health.toFixed(1)}%`, // Health might be less relevant now
+                         assessment: assessmentText, // Use translated assessment text
+                         assessmentClass: assessmentClass
+                     });
+                 }
+             }
+             return report;
+         }
+
+
+        // --- UI Interaction & Display v2.1 (Language Aware) ---
+        const ui = {
+             cpu_sc: document.getElementById('cpu_sc'),
+             cpu_mc: document.getElementById('cpu_mc'),
+             gpu: document.getElementById('gpu'),
+             thermal: document.getElementById('thermal'),
+             calculateBtn: document.getElementById('calculate-btn'),
+             resultArea: document.getElementById('result-area'),
+             errorDisplay: document.getElementById('error-display'),
+             langToggleButton: document.getElementById('lang-toggle-btn') // Get the lang button
+         };
+
+        ui.calculateBtn.addEventListener('click', () => {
+            const langData = translations[currentLanguage]; // Get current translations
+            ui.errorDisplay.innerHTML = '';
+            ui.errorDisplay.className = '';
+            ui.resultArea.innerHTML = langData.results.loading; // Use translated loading text
+            ui.resultArea.className = 'loading visible';
+
+            const inputs = {
+                cpu_sc: parseFloat(ui.cpu_sc.value),
+                cpu_mc: parseFloat(ui.cpu_mc.value),
+                gpu: parseFloat(ui.gpu.value),
+                thermal: parseFloat(ui.thermal.value) || KineticCoreConfig.REFERENCE_EPOCH.thermal
+            };
+
+            let isValid = true;
+            const requiredInputKeys = ['cpu_sc', 'cpu_mc', 'gpu'];
+            for (const key of requiredInputKeys) {
+                if (isNaN(inputs[key]) || inputs[key] <= 0) {
+                     const rawValue = document.getElementById(key.replace('cpu_','')).value;
+                     if (!isFinite(inputs[key]) && rawValue.length > 15) {
+                          console.warn(`Input for ${key} is extremely large...`);
+                     } else {
+                         isValid = false;
+                         // Use translated error message with placeholder
+                         const componentName = key.toUpperCase().replace('CPU_', '').replace('_','-');
+                         displayError(langData.errors.invalidInput.replace('{component}', componentName));
+                         break;
+                     }
+                 }
+             }
+            if (isNaN(inputs.thermal) || inputs.thermal <= 0) { inputs.thermal = KineticCoreConfig.REFERENCE_EPOCH.thermal; console.warn("Invalid TDP...");}
+            if (!isValid) return;
+
+            setTimeout(() => {
+                try {
+                    const results = calculate_performance_index_v2_1(inputs);
+                     // Store results along with the inputs used to generate them
+                    currentResults = { ...results, inputs: inputs };
+
+                    const stratum = classify_stratum(results.final_score, langData); // Pass langData
+                    const component_report = generate_component_report(inputs, langData); // Pass langData
+
+                    displayResults_v2_1(results, stratum, component_report, langData); // Pass langData
+
+                    requestAnimationFrame(() => { animateBars(results.factors); });
+
+                } catch (error) {
+                    console.error("Calculation Error:", error);
+                    displayError(langData.errors.calculationError); // Use translated error
+                }
+            }, 250);
+        });
+
+        // Updated display function to accept langData
+        function displayResults_v2_1(results, stratum, component_report, langData) {
+             ui.resultArea.className = 'visible';
+             const factors = results.factors;
+             const formatFactor = (val, decimals = 3) => val.toFixed(decimals);
+             const formatPercent = (val, decimals = 1) => (val * 100).toFixed(decimals) + '%';
+
+             const viabilityClass = factors.viability_multiplier < 0.999 ? 'penalty' : '';
+             const balanceOverallClass = factors.balance_overall >= 0.98 ? 'bonus' : (factors.balance_overall < 0.9 ? 'penalty' : '');
+             const balanceRatioClass = factors.balance_ratio >= 0.98 ? 'bonus' : (factors.balance_ratio < 0.9 ? 'penalty' : '');
+             const synergyGenClass = factors.synergy_general > 1.01 ? 'bonus' : '';
+             const synergyScGpuClass = factors.synergy_sc_gpu > 1.01 ? 'bonus' : '';
+             const latencyBoostClass = factors.boost_latency > 1.001 ? 'bonus' : '';
+             const thermalPenaltyClass = factors.penalty_thermal_pct > 1 ? 'penalty' : '';
+
+             // Use langData for all labels
+             ui.resultArea.innerHTML = `
+                 <div class="result-header">
+                     <div class="result-score-value">${results.final_score.toFixed(1)}</div>
+                     <div class="result-score-label">${langData.results.mainLabel}</div>
+                     <div class="performance-tier">
+                         <span class="tier-name ${stratum.colorClass}">${stratum.name}</span>
+                         <span class="tier-desc">${stratum.desc}</span>
+                     </div>
+                 </div>
+
+                 <div class="result-details">
+                     <div class="result-section">
+                         <h2>${langData.results.coreComponents}</h2>
+                         <div class="detail-item"> <span class="label">${langData.results.scNorm}</span> <div class="bar-container"><div class="bar" data-value="${factors.norm_sc}"></div></div> <span class="value">${formatPercent(factors.norm_sc)}</span> </div>
+                         <div class="detail-item"> <span class="label">${langData.results.mcNorm}</span> <div class="bar-container"><div class="bar" data-value="${factors.norm_mc}"></div></div> <span class="value">${formatPercent(factors.norm_mc)}</span> </div>
+                         <div class="detail-item"> <span class="label">${langData.results.gpuNorm}</span> <div class="bar-container"><div class="bar" data-value="${factors.norm_gpu}"></div></div> <span class="value">${formatPercent(factors.norm_gpu)}</span> </div>
+                         <div class="detail-item">
+                             <span class="label modifier-label">${langData.results.blendedPerf}</span>
+                             <span class="value modifier-value">${formatFactor(factors.core_perf)}</span>
+                         </div>
+                     </div>
+
+                     <div class="result-section">
+                        <h2>${langData.results.modifiersPenalties}</h2>
+                        <div class="detail-item"> <span class="label">${langData.results.overallBalance}</span> <span class="value modifier-value ${balanceOverallClass}">${formatFactor(factors.balance_overall)}</span> </div>
+                        <div class="detail-item"> <span class="label">${langData.results.ratioFactor}</span> <span class="value modifier-value ${balanceRatioClass}">${formatFactor(factors.balance_ratio)}</span> </div>
+                        <div class="detail-item"> <span class="label">${langData.results.generalSynergy}</span> <span class="value modifier-value ${synergyGenClass}">${formatFactor(factors.synergy_general)}</span> </div>
+                        <div class="detail-item"> <span class="label">${langData.results.scGpuSynergy}</span> <span class="value modifier-value ${synergyScGpuClass}">${formatFactor(factors.synergy_sc_gpu)}</span> </div>
+                        <div class="detail-item"> <span class="label">${langData.results.latencyBoost}</span> <span class="value modifier-value ${latencyBoostClass}">${formatFactor(factors.boost_latency)}</span> </div>
+                        <div class="detail-item"> <span class="label">${langData.results.thermalPenalty}</span> <span class="value modifier-value ${thermalPenaltyClass}">-${factors.penalty_thermal_pct.toFixed(1)}%</span> </div>
+                        <div class="detail-item">
+                            <span class="label">${langData.results.viabilityFactor}</span>
+                            <span class="value modifier-value ${viabilityClass}">${formatFactor(factors.viability_multiplier)}</span>
+                        </div>
+                    </div>
+
+                     <div class="result-section" style="grid-column: 1 / -1;">
+                         <h2>${langData.results.componentSnapshot}</h2>
+                         <ul class="component-list">
+                              ${component_report.map(comp => `
+                                 <li class="component-item">
+                                     <span class="comp-name">${comp.component}:</span> <span class="comp-value">${comp.value}</span>
+                                     <span class="comp-modernity ${comp.assessmentClass}">${comp.modernity} (${comp.assessment})</span>
+                                 </li>`).join('')}
+                         </ul>
+                     </div>
+                 </div>
+             `;
+         }
+
+        function animateBars(factors) { /* ... same ... */
+            const bars = ui.resultArea.querySelectorAll('.bar');
+             bars.forEach(bar => {
+                 const labelElement = bar.closest('.detail-item')?.querySelector('.label');
+                 let factorKey = null;
+                 if (labelElement) {
+                     // This check needs to be language-agnostic now or rely on a different attribute
+                     // Let's rely on the data-value being set correctly initially
+                     const dataValue = bar.getAttribute('data-value');
+                     if (dataValue == factors.norm_sc) factorKey = 'norm_sc';
+                     else if (dataValue == factors.norm_mc) factorKey = 'norm_mc';
+                     else if (dataValue == factors.norm_gpu) factorKey = 'norm_gpu';
+                 }
+                 const value = factorKey ? factors[factorKey] : parseFloat(bar.getAttribute('data-value'));
+
+                 if (value !== null && !isNaN(value)) { bar.style.width = `${Math.min(100, Math.max(0, value * 100))}%`; }
+                 else { bar.style.width = '0%'; }
+             });
+         }
+
+        function displayError(message) {
+             ui.errorDisplay.innerHTML = `<div class="error-message">${message}</div>`;
+             ui.resultArea.innerHTML = '';
+             ui.resultArea.className = '';
+         }
+
+        // --- Language Switching Logic ---
+        ui.langToggleButton.addEventListener('click', () => {
+            currentLanguage = (currentLanguage === 'en') ? 'zh' : 'en';
+            localStorage.setItem('kineticCoreLang', currentLanguage); // Save preference
+            applyTranslations(currentLanguage);
+        });
+
+        // --- Initial Load ---
+        function initialize() {
+            // Load language preference
+            const savedLang = localStorage.getItem('kineticCoreLang');
+            if (savedLang && translations[savedLang]) {
+                currentLanguage = savedLang;
+            }
+            // Apply initial translations
+            applyTranslations(currentLanguage);
+        }
+
+        // Enter key trigger
+        ui.thermal.addEventListener('keypress', (e) => { if (e.key === 'Enter') ui.calculateBtn.click(); });
+
+        // Initialize the app
+        initialize();
+
+    </script>
+
+</body>
+</html>
